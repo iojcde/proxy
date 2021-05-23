@@ -2,3 +2,4 @@ build/
 .env
 .env.local
 .pem
+node_modules
