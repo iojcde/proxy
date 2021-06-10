@@ -1,6 +1,5 @@
 import express, { Application } from 'express'
 import { SecureContext } from 'tls'
-import logger from './tools/logs'
 import httpProxy from 'http-proxy'
 import ShrinkRay from 'shrink-ray-current'
 const app: Application = express()
@@ -14,17 +13,15 @@ const proxy = httpProxy.createProxy()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(ShrinkRay())
-app.use((req, res) => {
-  if (req.headers.host === 'api.proxy.local') 
-})
+
 app.use((req, res) => {
   proxy.web(req, res, { target: 'http://google.com' })
 })
 
 const options = {
   // A function that will be called if the client supports SNI TLS extension(Pretty much every modern browser).
-  SNICallback: (servername: string, cb: (err: Error, ctx: SecureContext | null) => void) => {
-    const ctx = getSecureContext(servername)
+  SNICallback: async (servername: string, cb: (err: Error, ctx: SecureContext | null) => void) => {
+    const ctx = await getSecureContext(servername)
     if (cb) {
       cb(null, ctx)
     } else {
