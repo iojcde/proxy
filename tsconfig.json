@@ -1,14 +1,25 @@
 {
   "compilerOptions": {
-    "lib": ["es5", "es6"],
+    "lib": [
+      "es5",
+      "es6"
+    ],
+    "baseUrl": "./",
     "target": "es6",
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "outDir": "./build",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
   },
-  "exclude" : [ ],
-  "include" : [ ]
+  "exclude": [
+    "node_modules"
+  ],
+  "include": []
 }

@@ -1,6 +1,7 @@
 build/
 .env
-.env.local
-.pem
+*.pem
 node_modules/
 server.js
+certs/
+logs/
