@@ -3,6 +3,7 @@ import DigitalOcean from 'do-wrapper'
 import logger from '../tools/logs'
 import fs from 'fs'
 import path from 'path'
+import cache from './cache'
 const fsPromises = fs.promises
 
 const init = async (): Promise<acme.Client> => {
@@ -51,25 +52,27 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
         _challenge: unknown,
         keyAuthorization: string,
       ) => {
-        logger.info('requesting certificate...')
-        const _record = await doInstance.domains
-          .createRecord(process.env.BASEDOMAIN, {
-            type: 'TXT',
-            name: `_acme-challenge.${domain}`,
-            data: keyAuthorization,
-            ttl: 1800,
-            tag: '',
-          })
-          .catch((err) => logger.error(err))
-        console.log(_record)
-        await sleep(5000)
+        if (!cache.get(`pending:${domain}`)) {
+          logger.info('requesting certificate...')
+          const _record = await doInstance.domains
+            .createRecord(process.env.BASEDOMAIN, {
+              type: 'TXT',
+              name: `_acme-challenge.${domain}`,
+              data: keyAuthorization,
+              ttl: 1800,
+              tag: '',
+            })
+            .catch((err) => logger.error(err))
+          cache.set(`pending:${domain}`, true)
+          console.log(_record)
+          await sleep(5000)
+        }
       },
       challengeRemoveFn: async () => {
+        cache.set(`pending:${domain}`, false)
         const allRecords = await doInstance.domains.getByName(process.env.BASEDOMAIN)
         const id = allRecords.find(
-          (r) =>
-            r.type === 'TXT' &&
-            r.name === `_acme-challenge.${domain}.worffl.process.env.BASEDOMAIN`,
+          (r) => r.type === 'TXT' && r.name === `_acme-challenge.${domain}`,
         )
         await doInstance.domains
           .deleteRecord(process.env.BASEDOMAIN, id)
