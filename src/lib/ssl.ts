@@ -10,8 +10,9 @@ export async function getSecureContext(servername: string): Promise<SecureContex
   const _cached = cache.get(servername)
   if (!_cached) {
     if (!fs.existsSync(path.resolve(__dirname, `../certs/${servername}`))) {
-      await getCert({ domain: servername })
+    return null
     }
+    
     try {
       const ctx = tls.createSecureContext({
         key: fs.readFileSync(path.resolve(__dirname, `../certs/${servername}/key.pem`)),

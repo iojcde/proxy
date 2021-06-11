@@ -7,6 +7,7 @@ import http from 'http'
 import https from 'https'
 import { getSecureContext } from './lib/ssl'
 import dotenv from 'dotenv'
+import { getCert } from './lib/letsencrypt'
 dotenv.config()
 
 const proxy = httpProxy.createProxy()
@@ -17,7 +18,6 @@ app.use(ShrinkRay())
 app.use((req, res) => {
   proxy.web(req, res, { target: 'http://google.com' })
 })
-
 const options = {
   // A function that will be called if the client supports SNI TLS extension(Pretty much every modern browser).
   SNICallback: async (servername: string, cb: (err: Error, ctx: SecureContext | null) => void) => {
@@ -32,7 +32,7 @@ const options = {
 
 const httpsServer = https.createServer(options, app)
 
-httpsServer.listen(4000, function () {
+httpsServer.listen(443, function () {
   console.log('Listening https on port: 4000')
 })
 

@@ -7,10 +7,17 @@ import cache from './cache'
 const fsPromises = fs.promises
 
 const init = async (): Promise<acme.Client> => {
+let accountUrl = null;
+
+try {
+    accountUrl = fs.readFileSync('accountUrl.txt');
+}
+catch (e) {}
   const accountPrivateKey = await acme.forge.createPrivateKey()
   const client = new acme.Client({
-    directoryUrl: acme.directory.letsencrypt.staging,
+    directoryUrl: acme.directory.letsencrypt.production,
     accountKey: accountPrivateKey,
+    accountUrl: accountUrl
   })
   return client
 }
@@ -45,6 +52,7 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
     .auto({
       email: process.env.EMAIL,
       csr: certificateRequest,
+      skipChallengeVerification: true,
       challengePriority: ['dns-01'],
       termsOfServiceAgreed: true,
       challengeCreateFn: async (
@@ -52,28 +60,28 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
         _challenge: unknown,
         keyAuthorization: string,
       ) => {
-        if (!cache.get(`pending:${domain}`)) {
-          logger.info('requesting certificate...')
-          const _record = await doInstance.domains
-            .createRecord(process.env.BASEDOMAIN, {
-              type: 'TXT',
-              name: `_acme-challenge.${domain}`,
-              data: keyAuthorization,
-              ttl: 1800,
-              tag: '',
-            })
-            .catch((err) => logger.error(err))
-          cache.set(`pending:${domain}`, true)
-          console.log(_record)
-          await sleep(5000)
-        }
+        logger.info(`Requesting certificate for ${domain}...`)
+        const _record = await doInstance.domains
+          .createRecord(process.env.BASEDOMAIN, {
+            type: 'TXT',
+            name: `_acme-challenge.${domain}`.replace('.' + process.env.BASEDOMAIN, ''),
+            data: keyAuthorization,
+            ttl: 1800,
+            tag: '',
+          })
+          .catch((err) => logger.error(err))
+        console.log(_record)
+        await sleep(5000)
       },
-      challengeRemoveFn: async () => {
-        cache.set(`pending:${domain}`, false)
-        const allRecords = await doInstance.domains.getByName(process.env.BASEDOMAIN)
+      challengeRemoveFn: async (_authz, _challenge, keyAuthorization) => {
+        const allRecords = await doInstance.domains.getAllRecords(process.env.BASEDOMAIN, '', true)
         const id = allRecords.find(
-          (r) => r.type === 'TXT' && r.name === `_acme-challenge.${domain}`,
-        )
+          (r) =>
+            r.type === 'TXT' &&
+            r.name === `_acme-challenge.${domain}`.replace('.' + process.env.BASEDOMAIN, ''),
+          r.data === keyAuthorization,
+        ).id
+        console.log('Deleting record id ' + id.toString())
         await doInstance.domains
           .deleteRecord(process.env.BASEDOMAIN, id)
           .catch((err) => logger.error(err))
@@ -82,10 +90,9 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
     .catch((err) => {
       logger.error(err)
     })
-  console.log(cert)
   console.log('we got the cert!!!')
   try {
-    const dir = path.resolve(__dirname, `../certs/${domain}/key.pem`)
+    const dir = path.resolve(__dirname, `../certs/${domain}`)
 
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir)
@@ -104,3 +111,4 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
   return
 }
 export { getCert }
+
