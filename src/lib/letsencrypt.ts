@@ -6,12 +6,11 @@ import path from 'path'
 const fsPromises = fs.promises
 
 const init = async (): Promise<acme.Client> => {
-  let accountUrl = null
+  const accountPrivateKey = fs.readFileSync(
+    path.resolve(__dirname, '../config/accountPrivateKey.pem'),
+  )
+  const accountUrl = fs.readFileSync(path.resolve(__dirname, '../config/accountUrl.txt')).toString()
 
-  try {
-    accountUrl = fs.readFileSync('accountUrl.txt')
-  } catch (e) {}
-  const accountPrivateKey = await acme.forge.createPrivateKey()
   const client = new acme.Client({
     directoryUrl: acme.directory.letsencrypt.production,
     accountKey: accountPrivateKey,
