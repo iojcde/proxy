@@ -1,0 +1,7 @@
+{
+  "*.jcde.xyz": "192.168.219.102",
+  "jcde.xyz": "localhost:4000",
+  "teamint.xyz": "localhost:3000",
+  "s3.jcde.xyz": "192.168.219.106:9000",
+  "lab.jcde.xyz": "192.168.219.106"
+}

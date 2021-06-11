@@ -108,4 +108,4 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
   }
   return
 }
-export { getCert }
+export default getCert
