@@ -3,21 +3,19 @@ import DigitalOcean from 'do-wrapper'
 import logger from '../tools/logs'
 import fs from 'fs'
 import path from 'path'
-import cache from './cache'
 const fsPromises = fs.promises
 
 const init = async (): Promise<acme.Client> => {
-let accountUrl = null;
+  let accountUrl = null
 
-try {
-    accountUrl = fs.readFileSync('accountUrl.txt');
-}
-catch (e) {}
+  try {
+    accountUrl = fs.readFileSync('accountUrl.txt')
+  } catch (e) {}
   const accountPrivateKey = await acme.forge.createPrivateKey()
   const client = new acme.Client({
     directoryUrl: acme.directory.letsencrypt.production,
     accountKey: accountPrivateKey,
-    accountUrl: accountUrl
+    accountUrl: accountUrl,
   })
   return client
 }
@@ -111,4 +109,3 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
   return
 }
 export { getCert }
-
