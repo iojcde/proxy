@@ -30,7 +30,8 @@
   },
   "lint-staged": {
     "*.{js,ts}": [
-      "eslint --fix"
+      "eslint --fix",
+      "sh -c tsc --noEmit"
     ]
   },
   "dependencies": {

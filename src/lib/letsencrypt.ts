@@ -74,10 +74,10 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
       challengeRemoveFn: async (_authz, _challenge, keyAuthorization) => {
         const allRecords = await doInstance.domains.getAllRecords(process.env.BASEDOMAIN, '', true)
         const id = allRecords.find(
-          (r) =>
+          (r: Record<string, unknown>) =>
             r.type === 'TXT' &&
-            r.name === `_acme-challenge.${domain}`.replace('.' + process.env.BASEDOMAIN, ''),
-          r.data === keyAuthorization,
+            r.name === `_acme-challenge.${domain}`.replace('.' + process.env.BASEDOMAIN, '') &&
+            r.data === keyAuthorization,
         ).id
         console.log('Deleting record id ' + id.toString())
         await doInstance.domains

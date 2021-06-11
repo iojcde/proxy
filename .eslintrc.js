@@ -23,6 +23,7 @@ module.exports = {
       rules: {
 
         "@typescript-eslint/no-unused-vars": ["error"],
+        "no-empty": ["error", { "allowEmptyCatch": true }],
         "@typescript-eslint/explicit-function-return-type": [
           // I suggest this setting for requiring return types on functions only where usefull
           "warn",

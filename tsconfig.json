@@ -12,6 +12,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@/*": [
         "./*"
@@ -19,7 +20,9 @@
     }
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
   ],
-  "include": []
+  "include": [
+    "src/"
+  ]
 }
