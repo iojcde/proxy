@@ -88,7 +88,6 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
     .catch((err) => {
       logger.error(err)
     })
-  console.log('we got the cert!!!')
   try {
     const dir = path.resolve(__dirname, `../certs/${domain}`)
 
@@ -103,6 +102,7 @@ const getCert = async ({ domain }: getCertProps): Promise<void> => {
       path.resolve(__dirname, `../certs/${domain}/cert.pem`),
       cert as string,
     )
+    await fsPromises.writeFile(path.resolve(__dirname, '../accountUrl.txt'), client.getAccountUrl())
   } catch (e) {
     logger.error(e)
   }

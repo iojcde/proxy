@@ -6,7 +6,7 @@ import http from 'http'
 import https from 'https'
 import { getSecureContext } from './lib/ssl'
 import dotenv from 'dotenv'
-import { getUrl, parseConfig } from './lib/config'
+import { initCerts, parseConfig, getUrl } from './lib/config'
 import logger from './tools/logs'
 
 const app: Application = express()
@@ -17,13 +17,18 @@ proxy.on('error', (err) => {
 })
 
 const config = parseConfig()
+initCerts(config)
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(ShrinkRay())
 app.use((req, res) => {
   const url = getUrl(req.headers.host, config)
-  proxy.web(req, res, { target: `http://${url}` })
+  if (url !== undefined) {
+    proxy.web(req, res, { target: `http://${url}` })
+  } else {
+    res.json({ status: 404, message: 'not found' })
+  }
 })
 
 const options = {
