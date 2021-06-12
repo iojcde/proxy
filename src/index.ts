@@ -4,7 +4,7 @@ import http from 'http'
 import { getSecureContext } from './lib/ssl'
 import dotenv from 'dotenv'
 import { parseConfig, getUrl } from './lib/config'
-import h2request from 'http2-wrapper'
+import shrinkRay from 'shrink-ray-current'
 import proxy from 'http2-proxy'
 
 const options = {
@@ -40,15 +40,18 @@ const defaultWSHandler = (err: Error, req: http2.Http2ServerRequest, socket): vo
 const server = http2.createSecureServer(options)
 
 server.on('request', (req, res) => {
-  const url = getUrl(req.headers.host, config)
-  console.log('url: ' + url)
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  shrinkRay()(req, res, () => {})
+  console.log(req.headers)
+  const url = getUrl(req.headers.host ? req.headers.host : req.headers[':authority'], config)
+  console.log('url: ' + url.domain)
   proxy.web(
     req,
     res,
     {
       hostname: url.domain,
       port: url.port,
-      onReq: async (req, options) => h2request.request(options),
+      // onReq: async (req, options) => h2request.request(options),
     },
     defaultWebHandler,
   )
@@ -80,3 +83,5 @@ http
     res.end()
   })
   .listen(80)
+
+server.listen(443)
