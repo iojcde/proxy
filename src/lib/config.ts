@@ -9,7 +9,7 @@ type configType = Record<string, configItem>
 
 const parseConfig = (): configType => {
   const config = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, '../config.json')).toString('utf8'),
+    fs.readFileSync(path.resolve(__dirname, '../config/config.json')).toString('utf8'),
   )
   Object.keys(config).map((el) => {
     if (typeof config[el] === 'string') config[el] = { domain: config[el], port: 80 }
