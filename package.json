@@ -5,6 +5,7 @@
   },
   "devDependencies": {
     "@types/bytes": "^3.1.0",
+    "@types/finalhandler": "^1.1.0",
     "@types/redis": "^2.8.29",
     "@typescript-eslint/eslint-plugin": "^4.24.0",
     "@typescript-eslint/parser": "^4.24.0",
@@ -38,10 +39,10 @@
     "do-wrapper": "^4.5.1",
     "dotenv": "^10.0.0",
     "esbuild": "^0.12.1",
-    "fast-proxy": "^2.0.0",
+    "http2-proxy": "^5.0.53",
+    "http2-wrapper": "^2.0.5",
     "lru-cache": "^6.0.0",
     "matcher": "^4.0.0",
-    "restana": "^4.9.1",
     "winston": "^3.3.3"
   }
 }
