@@ -9,7 +9,10 @@ const init = async (): Promise<acme.Client> => {
   const accountPrivateKey = fs.readFileSync(
     path.resolve(__dirname, '../config/accountPrivateKey.pem'),
   )
-  const accountUrl = fs.readFileSync(path.resolve(__dirname, '../config/accountUrl.txt')).toString()
+  const accountUrl = fs
+    .readFileSync(path.resolve(__dirname, '../config/accountUrl.txt'))
+    .toString()
+    .replace('\n', '')
 
   const client = new acme.Client({
     directoryUrl: acme.directory.letsencrypt.production,
