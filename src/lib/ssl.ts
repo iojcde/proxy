@@ -3,23 +3,37 @@ import logger from '../tools/logs'
 import { SecureContext } from 'tls'
 import tls from 'tls'
 import path from 'path'
+import matcher from 'matcher'
 import cache from '../lib/cache'
+import { configType, filterConfig } from '../lib/config'
 
-export async function getSecureContext(servername: string): Promise<SecureContext | null> {
-  const _cached = cache.get(servername)
-  if (!_cached) {
-    if (!fs.existsSync(path.resolve(__dirname, `../certs/${servername}`))) {
+export async function getSecureContext(
+  servername: string,
+  config: configType,
+): Promise<SecureContext | null> {
+  const filtered = filterConfig({
+    config: config,
+    mode: 'KEY',
+    fn: (el) =>
+      matcher.isMatch(servername, el) || matcher.isMatch(servername, el.replace('*.', '')),
+  }) as string
+  const newServerName = filtered.replace('*.', '')
+  const _cached = cache.get(newServerName)
+
+  if (_cached) return _cached
+  else {
+    if (!fs.existsSync(path.resolve(__dirname, `../certs/${newServerName}`))) {
       return null
     }
 
     try {
       const ctx = tls.createSecureContext({
-        key: fs.readFileSync(path.resolve(__dirname, `../certs/${servername}/key.pem`)),
-        cert: fs.readFileSync(path.resolve(__dirname, `../certs/${servername}/cert.pem`)),
+        key: fs.readFileSync(path.resolve(__dirname, `../certs/${newServerName}/key.pem`)),
+        cert: fs.readFileSync(path.resolve(__dirname, `../certs/${newServerName}/cert.pem`)),
       })
 
-      logger.info(`SSL certificate has been found and assigned to ${servername}`)
-      cache.set(servername, ctx)
+      logger.info(`SSL certificate has been found and assigned to ${newServerName}`)
+      cache.set(newServerName, ctx)
       return ctx
     } catch (e) {
       logger.error(e)

@@ -5,10 +5,12 @@ import { getSecureContext } from './lib/ssl'
 import dotenv from 'dotenv'
 import { parseConfig, getUrl } from './lib/config'
 import proxy from 'http2-proxy'
+const config = parseConfig()
+
 const options = {
   allowHTTP1: true,
   SNICallback: async (servername: string, cb: (err: Error, ctx: SecureContext | null) => void) => {
-    const ctx = await getSecureContext(servername)
+    const ctx = await getSecureContext(servername, config)
     if (cb) {
       cb(null, ctx)
     } else {
@@ -38,7 +40,7 @@ const server = http2.createSecureServer(options)
 
 server.on('request', async (req, res) => {
   const baseDomain = req.headers.host ? req.headers.host : req.headers[':authority']
-  /* eslint-disable-next-line @typescript-eslint/no-empty-function */
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const url = getUrl(baseDomain, config)
   await proxy.web(req, res, {
     hostname: url.domain,
@@ -52,7 +54,7 @@ server.on('request', async (req, res) => {
 
 server.on('upgrade', async (req, res, head) => {
   const baseDomain = req.headers.host ? req.headers.host : req.headers[':authority']
-  const url = getUrl(req.headers.host ? req.headers.host : req.headers[':authority'], config)
+  const url = getUrl(baseDomain, config)
   await proxy.ws(
     req,
     res,
@@ -68,8 +70,6 @@ server.on('upgrade', async (req, res, head) => {
   )
 })
 dotenv.config()
-
-const config = parseConfig()
 
 http
   .createServer((req, res) => {
