@@ -17,6 +17,7 @@ export async function getSecureContext(
     fn: (el) =>
       matcher.isMatch(servername, el) || matcher.isMatch(servername, el.replace('*.', '')),
   }) as string
+  if (filtered === undefined) return null
   const newServerName = filtered.replace('*.', '')
   const _cached = cache.get(newServerName)
 

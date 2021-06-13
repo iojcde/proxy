@@ -42,11 +42,15 @@ server.on('request', async (req, res) => {
   const baseDomain = req.headers.host ? req.headers.host : req.headers[':authority']
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const url = getUrl(baseDomain, config)
+  if (url === null) {
+    res.statusCode = 400
+    res.end('400 bad request')
+  }
   await proxy.web(req, res, {
     hostname: url.domain,
     port: url.port,
     onReq: async (req, { headers }) => {
-      headers['x-forwarded-host'] = baseDomain
+      headers['host'] = baseDomain
     },
   }),
     defaultWebHandler

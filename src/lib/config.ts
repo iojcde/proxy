@@ -34,8 +34,10 @@ const filterConfig = ({
 const getUrl = (servername: string, config: configType): configItem | undefined => {
   const _cached = cache.get(`getUrl:${servername}`)
   if (_cached) return _cached
-  else {
-    if (servername.split('.').length > 3) return undefined
+  if (servername.split('.').length > 3) {
+    cache.set(`getUrl:${servername}`, undefined)
+    return undefined
+  } else {
     const filtered = filterConfig({
       config: config,
       mode: 'ITEM',
