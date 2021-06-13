@@ -5,10 +5,8 @@ import { getSecureContext } from './lib/ssl'
 import dotenv from 'dotenv'
 import { parseConfig, getUrl } from './lib/config'
 import proxy from 'http2-proxy'
-
 const options = {
   allowHTTP1: true,
-  // A function that will be called if the client supports SNI TLS extension(Pretty much every modern browser).
   SNICallback: async (servername: string, cb: (err: Error, ctx: SecureContext | null) => void) => {
     const ctx = await getSecureContext(servername)
     if (cb) {
@@ -38,35 +36,33 @@ const defaultWSHandler = (err: Error, req: http2.Http2ServerRequest, socket): vo
 }
 const server = http2.createSecureServer(options)
 
-server.on('request', (req, res) => {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  const url = getUrl(req.headers.host ? req.headers.host : req.headers[':authority'], config)
-  res.setHeader('x-forwarded-for', req.socket.remoteAddress)
-  res.setHeader('x-forwarded-proto', 'https')
-  res.setHeader('x-forwarded-host', req.headers.host ? req.headers.host : req.headers[':authority'])
-  proxy.web(
-    req,
-    res,
-    {
-      hostname: url.domain,
-      port: url.port,
+server.on('request', async (req, res) => {
+  const baseDomain = req.headers.host ? req.headers.host : req.headers[':authority']
+  /* eslint-disable-next-line @typescript-eslint/no-empty-function */
+  const url = getUrl(baseDomain, config)
+  await proxy.web(req, res, {
+    hostname: url.domain,
+    port: url.port,
+    onReq: async (req, { headers }) => {
+      headers['x-forwarded-host'] = baseDomain
     },
-    defaultWebHandler,
-  )
+  }),
+    defaultWebHandler
 })
 
-server.on('upgrade', (req, res, head) => {
+server.on('upgrade', async (req, res, head) => {
+  const baseDomain = req.headers.host ? req.headers.host : req.headers[':authority']
   const url = getUrl(req.headers.host ? req.headers.host : req.headers[':authority'], config)
-  res.setHeader('x-forwarded-for', req.socket.remoteAddress)
-  res.setHeader('x-forwarded-proto', 'https')
-  res.setHeader('x-forwarded-host', req.headers.host ? req.headers.host : req.headers[':authority'])
-  proxy.ws(
+  await proxy.ws(
     req,
     res,
     head,
     {
       hostname: url.domain,
       port: url.port,
+      onReq: async (req, { headers }) => {
+        headers['x-forwarded-host'] = baseDomain
+      },
     },
     defaultWSHandler,
   )
@@ -74,9 +70,7 @@ server.on('upgrade', (req, res, head) => {
 dotenv.config()
 
 const config = parseConfig()
-// initCerts(config)
 
-// Redirect http traffic to https
 http
   .createServer((req, res) => {
     res.writeHead(301, { Location: 'https://' + req.headers['host'] + req.url })
