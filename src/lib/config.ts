@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs'
 import path from 'path'
 import getCert from './letsencrypt'
 import matcher from 'matcher'
 import cache from './cache'
 
-type configItem = { domain: string; port: number }
+type configItem = { domain: string; port: number; dns: 'Cloudflare' | 'DigitalOcean' }
 export type configType = Record<string, configItem>
 
 const parseConfig = (): configType => {
@@ -34,7 +35,7 @@ const filterConfig = ({
 const getUrl = (servername: string, config: configType): configItem | undefined => {
   const _cached = cache.get(`getUrl:${servername}`)
   if (_cached) return _cached
-  if (servername.split('.').length > 3) {
+  if (servername.split('.').length > 4) {
     cache.set(`getUrl:${servername}`, undefined)
     return undefined
   } else {
@@ -51,12 +52,12 @@ const getUrl = (servername: string, config: configType): configItem | undefined 
 
 const initCerts = (config: configType): void => {
   const noCertDomains = Object.keys(config).filter((el) => {
-    if (fs.existsSync(path.resolve(__dirname, `../certs/${el}`))) {
+    if (fs.existsSync(path.resolve(__dirname, `../certs/${el.replace('*.', '')}`))) {
       return false
     } else return true
   })
   noCertDomains.map(async (el) => {
-    await getCert({ domain: el.replace('*.', '') })
+    await getCert({ domain: el, isWildcard: el.startsWith('*.'), dns: config[el].dns })
   })
 }
 export { initCerts, parseConfig, getUrl, filterConfig }
