@@ -9,7 +9,7 @@ Another simple reverse-proxy for personal use.
 
 ❌ Production-ready (WIP)
 
-❌ Fast (Faster [rust rewrite](https://github.com/jcdea/proxy-rust) in progress)
+❌ Fast (Faster rust rewrite in progress)
 
 ## Todos
   * Automatically renew certs
